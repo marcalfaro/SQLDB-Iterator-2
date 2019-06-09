@@ -17,13 +17,19 @@ Public Class Form1
 
             Case Else
                 Dim ds As String = tDataSource.Text.Trim
-                If String.IsNullOrWhiteSpace(ds) Then
-                    MsgBox("Data Source is required", vbApplicationModal + vbExclamation, "Oops!")
-                    Exit Sub
-                End If
+                Dim db As String = cboDB.Text.Trim
+                Dim dt As String = cboDT.Text.Trim
 
                 Select Case btn
                     Case btnEx1.Name    'Get all DBs here
+
+#Region " List all Databases "
+                        If String.IsNullOrWhiteSpace(ds) Then
+                            MsgBox("Data Source is required", vbApplicationModal + vbExclamation, "Oops!")
+                            tDataSource.Select()
+                            Exit Sub
+                        End If
+
                         btnEx1.Enabled = False
                         Dim rslt = Await Get_All_Database_Async(ds)
                         If Not rslt.Item1 Then
@@ -33,16 +39,65 @@ Public Class Form1
                             cboDB.DataSource = rslt.Item2
                         End If
                         btnEx1.Enabled = True
+#End Region
 
                     Case btnEx2.Name    'Get all Tables here
-                        btnEx2.Enabled = False
 
+#Region " List all tables in specified database "
+                        If String.IsNullOrWhiteSpace(ds) Then
+                            MsgBox("Data Source is required", vbApplicationModal + vbExclamation, "Oops!")
+                            tDataSource.Select()
+                            Exit Sub
+                        End If
+
+                        If String.IsNullOrWhiteSpace(db) Then
+                            MsgBox("Database is required", vbApplicationModal + vbExclamation, "Oops!")
+                            cboDB.Select()
+                            Exit Sub
+                        End If
+
+                        btnEx2.Enabled = False
+                        Dim rslt = Await Get_All_DataTables_Async(ds, db)
+                        If Not rslt.Item1 Then
+                            MsgBox(rslt.Item3, vbApplicationModal + vbExclamation, "Error")
+                        Else
+                            cboDT.DataSource = Nothing
+                            cboDT.DataSource = rslt.Item2
+                        End If
                         btnEx2.Enabled = True
+#End Region
 
                     Case btnEx3.Name
-                        btnEx3.Enabled = False
 
+#Region " Get data from table from specified database "
+                        If String.IsNullOrWhiteSpace(ds) Then
+                            MsgBox("Data Source is required", vbApplicationModal + vbExclamation, "Oops!")
+                            tDataSource.Select()
+                            Exit Sub
+                        End If
+
+                        If String.IsNullOrWhiteSpace(db) Then
+                            MsgBox("Database is required", vbApplicationModal + vbExclamation, "Oops!")
+                            cboDB.Select()
+                            Exit Sub
+                        End If
+
+                        If String.IsNullOrWhiteSpace(dt) Then
+                            MsgBox("Target Table is required", vbApplicationModal + vbExclamation, "Oops!")
+                            cboDT.Select()
+                            Exit Sub
+                        End If
+
+                        btnEx3.Enabled = False
+                        Dim rslt = Await Get_All_Data_Async(ds, db, dt)
+                        If Not rslt.Item1 Then
+                            MsgBox(rslt.Item3, vbApplicationModal + vbExclamation, "Error")
+                        Else
+                            cboDT.DataSource = Nothing
+                            cboDT.DataSource = rslt.Item2
+                        End If
                         btnEx3.Enabled = True
+#End Region
 
                     Case btnIterate.Name
                         btnIterate.Enabled = False
@@ -126,5 +181,67 @@ Public Class Form1
         End Try
 
         Return New Tuple(Of Boolean, List(Of String), String)(r_Success, r_DBs, r_Error)
+    End Function
+
+    Private Async Function Get_All_DataTables_Async(ByVal dataSrc As String, ByVal dataBase As String) As Task(Of Tuple(Of Boolean, List(Of String), String))
+
+        Dim r_Success As Boolean = False
+        Dim r_DTs As List(Of String) = Nothing
+        Dim r_Error As String = String.Empty
+
+        Try
+            Using con As New SqlConnection($"Data Source={dataSrc};Database={dataBase};Integrated Security=True")
+                con.Open()
+                Using cmd As New SqlCommand("SELECT * FROM INFORMATION_SCHEMA.tables", con)
+                    With cmd
+                        .CommandType = CommandType.Text
+                        Using sReader As SqlDataReader = Await cmd.ExecuteReaderAsync
+                            If sReader.HasRows Then
+                                r_DTs = New List(Of String)
+                                While Await sReader.ReadAsync
+                                    r_DTs.Add(sReader("TABLE_NAME"))
+                                End While
+                            End If
+                            r_Success = True
+                        End Using
+                    End With
+                End Using
+                con.Close()
+            End Using
+        Catch ex As Exception
+            r_Error = ex.Message
+        End Try
+
+        Return New Tuple(Of Boolean, List(Of String), String)(r_Success, r_DTs, r_Error)
+    End Function
+
+    Private Async Function Get_All_Data_Async(ByVal dataSrc As String, ByVal dataBase As String, ByVal dataTable As String) As Task(Of Tuple(Of Boolean, DataTable, String))
+
+        Dim r_Success As Boolean = False
+        Dim r_DT As DataTable = Nothing
+        Dim r_Error As String = String.Empty
+
+        Try
+            Using con As New SqlConnection($"Data Source={dataSrc};Database={dataBase};Initial Catalog={dataTable};Integrated Security=True")
+                con.Open()
+                Using cmd As New SqlCommand("SELECT * FROM {dataTable}", con)
+                    With cmd
+                        .CommandType = CommandType.Text
+                        Using sReader As SqlDataReader = Await cmd.ExecuteReaderAsync
+                            If sReader.HasRows Then
+                                r_DT = New DataTable
+                                r_DT.Load(sReader)
+                            End If
+                            r_Success = True
+                        End Using
+                    End With
+                End Using
+                con.Close()
+            End Using
+        Catch ex As Exception
+            r_Error = ex.Message
+        End Try
+
+        Return New Tuple(Of Boolean, List(Of String), String)(r_Success, r_DTs, r_Error)
     End Function
 End Class
