@@ -89,12 +89,12 @@ Public Class Form1
                         End If
 
                         btnEx3.Enabled = False
-                        Dim rslt = Await Get_All_Data_Async(ds, db, dt)
+                        Dim rslt = Await Get_All_Data_Async(ds, db, dt, "sa", "P4ssw0rd")
                         If Not rslt.Item1 Then
                             MsgBox(rslt.Item3, vbApplicationModal + vbExclamation, "Error")
                         Else
-                            cboDT.DataSource = Nothing
-                            cboDT.DataSource = rslt.Item2
+                            DataGridView1.DataSource = Nothing
+                            DataGridView1.DataSource = rslt.Item2
                         End If
                         btnEx3.Enabled = True
 #End Region
@@ -159,7 +159,7 @@ Public Class Form1
             '3. SELECT * FROM sys.databases d WHERE d.database_id > 4
 
             Using con As New SqlConnection($"Data Source={dataSrc};Integrated Security=True")
-                con.Open()
+                Await con.OpenAsync
                 Using cmd As New SqlCommand("sp_databases", con)
                     With cmd
                         .CommandType = CommandType.StoredProcedure
@@ -191,7 +191,7 @@ Public Class Form1
 
         Try
             Using con As New SqlConnection($"Data Source={dataSrc};Database={dataBase};Integrated Security=True")
-                con.Open()
+                Await con.OpenAsync
                 Using cmd As New SqlCommand("SELECT * FROM INFORMATION_SCHEMA.tables", con)
                     With cmd
                         .CommandType = CommandType.Text
@@ -215,16 +215,16 @@ Public Class Form1
         Return New Tuple(Of Boolean, List(Of String), String)(r_Success, r_DTs, r_Error)
     End Function
 
-    Private Async Function Get_All_Data_Async(ByVal dataSrc As String, ByVal dataBase As String, ByVal dataTable As String) As Task(Of Tuple(Of Boolean, DataTable, String))
+    Private Async Function Get_All_Data_Async(ByVal dataSrc As String, ByVal dataBase As String, ByVal dataTable As String, ByVal usr As String, ByVal pwd As String) As Task(Of Tuple(Of Boolean, DataTable, String))
 
         Dim r_Success As Boolean = False
         Dim r_DT As DataTable = Nothing
         Dim r_Error As String = String.Empty
 
         Try
-            Using con As New SqlConnection($"Data Source={dataSrc};Database={dataBase};Initial Catalog={dataTable};Integrated Security=True")
-                con.Open()
-                Using cmd As New SqlCommand("SELECT * FROM {dataTable}", con)
+            Using con As New SqlConnection($"Data Source={dataSrc};Initial Catalog={dataBase};User ID={usr};Password={pwd}")
+                Await con.OpenAsync
+                Using cmd As New SqlCommand($"SELECT * FROM {dataTable}", con)
                     With cmd
                         .CommandType = CommandType.Text
                         Using sReader As SqlDataReader = Await cmd.ExecuteReaderAsync
@@ -242,6 +242,7 @@ Public Class Form1
             r_Error = ex.Message
         End Try
 
-        Return New Tuple(Of Boolean, List(Of String), String)(r_Success, r_DTs, r_Error)
+        Return New Tuple(Of Boolean, DataTable, String)(r_Success, r_DT, r_Error)
     End Function
+
 End Class
