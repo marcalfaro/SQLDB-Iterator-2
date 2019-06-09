@@ -254,11 +254,6 @@ Public Class Form1
             Exit Sub
         End If
 
-        Dim abortOnError As Boolean = False
-        If MsgBox("Do you want to abort on error?", vbApplicationModal + vbQuestion + +vbYesNo, "Abort on Error") = vbYes Then
-            abortOnError = True
-        End If
-
         'Build the output datatable
         Dim outputDT As New DataTable
         With outputDT.Columns
@@ -359,4 +354,99 @@ Public Class Form1
     Private Sub llClear_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles llClear.LinkClicked
         DataGridView1.DataSource = Nothing
     End Sub
+
+    Private Async Sub btnDump_Click(sender As Object, e As EventArgs) Handles btnDump.Click
+        Dim ds As String = tDataSource.Text.Trim
+        If String.IsNullOrWhiteSpace(ds) Then
+            MsgBox("Data Source is required", vbApplicationModal + vbExclamation, "Oops!")
+            tDataSource.Select()
+            Exit Sub
+        End If
+
+        'Build the output datatable
+        Dim outputDT As New DataTable
+        With outputDT.Columns
+            .Add("sn", GetType(String))
+            .Add("Database", GetType(String))
+            .Add("Table", GetType(String))
+            .Add("Rows", GetType(Integer))
+        End With
+
+        btnDump.Enabled = False
+        Try
+            'Step 1: Get all DBs
+            Dim dtALL = Await Get_All_UserDB_All_UserTables_and_Total_Rows_Async(ds)
+            If Not dtALL.Item1 Then
+                MsgBox(dtALL.Item3, vbApplicationModal + vbExclamation, "Error")
+            Else
+                Dim sn As Integer = 0
+
+                'Step 3: We can actually use merge here, but i want to import row by row for my SNs
+                For Each dtR As DataRow In dtALL.Item2.Rows
+
+                    Dim db As String = dtR("databaseName")
+                    Dim dt As String = dtR("TableName")
+                    Dim ttl As Integer = dtR("TotalRowCount")
+
+                    sn += 1
+                    outputDT.Rows.Add({sn, db, dt, ttl})
+                Next
+
+                DataGridView1.DataSource = Nothing
+                DataGridView1.DataSource = outputDT
+
+            End If
+
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+        End Try
+
+        btnDump.Enabled = True
+    End Sub
+
+    Private Async Function Get_All_UserDB_All_UserTables_and_Total_Rows_Async(ByVal dataSrc As String) As Task(Of Tuple(Of Boolean, DataTable, String))
+
+        Dim r_Success As Boolean = False
+        Dim r_DT As DataTable = Nothing
+        Dim r_Error As String = String.Empty
+
+        Dim qry As String = "DECLARE @TableRowCounts TABLE (
+								[databaseName] Varchar(100),
+								[TableName] VARCHAR(128),
+								[TotalRowCount] INT
+							);
+                            INSERT INTO @TableRowCounts ([databaseNAme],[TableName],[TotalRowCount])
+                            EXEC sp_msforeachdb 'SELECT ""?"" AS db, [Tables].name AS [TableName], SUM([Partitions].[rows]) AS [TotalRowCount]
+					                             FROM [?].sys.tables AS [Tables]
+					                             JOIN [?].sys.partitions AS [Partitions]
+					                             ON [Tables].[object_id] = [Partitions].[object_id]
+					                             AND [Partitions].index_id IN ( 0, 1 )
+					                             GROUP BY [Tables].name;';						
+                            Select * From @TableRowCounts 
+                            WHERE databaseName IN (SELECT [name] FROM sys.databases d WHERE d.database_id > 4)
+                            ORDER by databaseNAme ASC, TableName ASC"
+        Try
+            Using con As New SqlConnection($"Data Source={dataSrc};Integrated Security=True")
+                Await con.OpenAsync
+                Using cmd As New SqlCommand(qry, con)
+                    With cmd
+                        .CommandType = CommandType.Text
+                        Using sReader As SqlDataReader = Await cmd.ExecuteReaderAsync
+                            If sReader.HasRows Then
+                                r_DT = New DataTable
+                                r_DT.Load(sReader)
+                            End If
+                            r_Success = True
+                        End Using
+                    End With
+                End Using
+                con.Close()
+            End Using
+        Catch ex As Exception
+            r_Error = ex.Message
+        End Try
+
+        Return New Tuple(Of Boolean, DataTable, String)(r_Success, r_DT, r_Error)
+    End Function
+
 End Class

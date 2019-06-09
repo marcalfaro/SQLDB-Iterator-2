@@ -37,6 +37,7 @@ Partial Class Form1
         Me.btnClear1 = New System.Windows.Forms.Button()
         Me.btnClear2 = New System.Windows.Forms.Button()
         Me.llClear = New System.Windows.Forms.LinkLabel()
+        Me.btnDump = New System.Windows.Forms.Button()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -144,7 +145,7 @@ Partial Class Form1
         Me.btnIterate.Name = "btnIterate"
         Me.btnIterate.Size = New System.Drawing.Size(119, 23)
         Me.btnIterate.TabIndex = 0
-        Me.btnIterate.Text = "Iterate to console"
+        Me.btnIterate.Text = "Iterate to Datatable"
         Me.btnIterate.UseVisualStyleBackColor = True
         '
         'btnClear1
@@ -176,11 +177,21 @@ Partial Class Form1
         Me.llClear.TabStop = True
         Me.llClear.Text = "Clear"
         '
+        'btnDump
+        '
+        Me.btnDump.Location = New System.Drawing.Point(96, 90)
+        Me.btnDump.Name = "btnDump"
+        Me.btnDump.Size = New System.Drawing.Size(119, 23)
+        Me.btnDump.TabIndex = 8
+        Me.btnDump.Text = "Dump with 1 query"
+        Me.btnDump.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(656, 572)
+        Me.Controls.Add(Me.btnDump)
         Me.Controls.Add(Me.llClear)
         Me.Controls.Add(Me.btnClear2)
         Me.Controls.Add(Me.btnClear1)
@@ -221,4 +232,5 @@ Partial Class Form1
     Friend WithEvents btnClear1 As Button
     Friend WithEvents btnClear2 As Button
     Friend WithEvents llClear As LinkLabel
+    Friend WithEvents btnDump As Button
 End Class
