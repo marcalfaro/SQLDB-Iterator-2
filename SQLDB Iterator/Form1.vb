@@ -2,7 +2,13 @@
 Imports System.Data.SqlClient
 
 Public Class Form1
-    Private Sub btnExecute_Click(sender As Object, e As EventArgs) Handles btnEx1.Click, btnEx3.Click, btnEx2.Click, btnIterate.Click, btnClear1.Click, btnClear2.Click
+
+    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+    End Sub
+
+
+    Private Async Sub btnExecute_Click(sender As Object, e As EventArgs) Handles btnEx1.Click, btnEx3.Click, btnEx2.Click, btnIterate.Click, btnClear1.Click, btnClear2.Click
 
         Dim btn As String = CType(sender, Button).Name
         Select Case btn
@@ -19,7 +25,7 @@ Public Class Form1
                 Select Case btn
                     Case btnEx1.Name    'Get all DBs here
                         btnEx1.Enabled = False
-                        Dim rslt = Get_All_Database(ds)
+                        Dim rslt = Await Get_All_Database_Async(ds)
                         If Not rslt.Item1 Then
                             MsgBox(rslt.Item3, vbApplicationModal + vbExclamation, "Error")
                         Else
@@ -85,7 +91,40 @@ Public Class Form1
         Return New Tuple(Of Boolean, List(Of String), String)(r_Success, r_DBs, r_Error)
     End Function
 
-    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Async Function Get_All_Database_Async(ByVal dataSrc As String) As Task(Of Tuple(Of Boolean, List(Of String), String))
 
-    End Sub
+        Dim r_Success As Boolean = False
+        Dim r_DBs As List(Of String) = Nothing
+        Dim r_Error As String = String.Empty
+
+        Try
+            'There are 3 queries to do this:
+            '1. EXEC sp_databases
+            '2. SELECT name FROM master.sys.databases
+            '3. SELECT * FROM sys.databases d WHERE d.database_id > 4
+
+            Using con As New SqlConnection($"Data Source={dataSrc};Integrated Security=True")
+                con.Open()
+                Using cmd As New SqlCommand("sp_databases", con)
+                    With cmd
+                        .CommandType = CommandType.StoredProcedure
+                        Using sReader As SqlDataReader = Await cmd.ExecuteReaderAsync
+                            If sReader.HasRows Then
+                                r_DBs = New List(Of String)
+                                While Await sReader.ReadAsync
+                                    r_DBs.Add(sReader("DATABASE_NAME"))
+                                End While
+                            End If
+                            r_Success = True
+                        End Using
+                    End With
+                End Using
+                con.Close()
+            End Using
+        Catch ex As Exception
+            r_Error = ex.Message
+        End Try
+
+        Return New Tuple(Of Boolean, List(Of String), String)(r_Success, r_DBs, r_Error)
+    End Function
 End Class
