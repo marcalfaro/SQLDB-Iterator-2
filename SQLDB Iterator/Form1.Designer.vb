@@ -36,6 +36,7 @@ Partial Class Form1
         Me.btnIterate = New System.Windows.Forms.Button()
         Me.btnClear1 = New System.Windows.Forms.Button()
         Me.btnClear2 = New System.Windows.Forms.Button()
+        Me.llClear = New System.Windows.Forms.LinkLabel()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -164,11 +165,23 @@ Partial Class Form1
         Me.btnClear2.Text = "Clear"
         Me.btnClear2.UseVisualStyleBackColor = True
         '
+        'llClear
+        '
+        Me.llClear.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.llClear.AutoSize = True
+        Me.llClear.Location = New System.Drawing.Point(605, 117)
+        Me.llClear.Name = "llClear"
+        Me.llClear.Size = New System.Drawing.Size(31, 13)
+        Me.llClear.TabIndex = 7
+        Me.llClear.TabStop = True
+        Me.llClear.Text = "Clear"
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(656, 572)
+        Me.Controls.Add(Me.llClear)
         Me.Controls.Add(Me.btnClear2)
         Me.Controls.Add(Me.btnClear1)
         Me.Controls.Add(Me.DataGridView1)
@@ -207,4 +220,5 @@ Partial Class Form1
     Friend WithEvents btnIterate As Button
     Friend WithEvents btnClear1 As Button
     Friend WithEvents btnClear2 As Button
+    Friend WithEvents llClear As LinkLabel
 End Class
