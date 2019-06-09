@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.645
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "SQLDB Iterator 2", "SQLDB Iterator\SQLDB Iterator 2.vbproj", "{96EAC813-4095-40A7-AAE1-3EFAD4581B1E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{96EAC813-4095-40A7-AAE1-3EFAD4581B1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96EAC813-4095-40A7-AAE1-3EFAD4581B1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96EAC813-4095-40A7-AAE1-3EFAD4581B1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96EAC813-4095-40A7-AAE1-3EFAD4581B1E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {16EBD9F8-EF7A-4EA3-B70E-23C84E57FB9E}
+	EndGlobalSection
+EndGlobal
